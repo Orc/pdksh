@@ -1,0 +1,23 @@
+#! /bin/sh
+#
+# Mastodon buildscript for ksh (pdksh 5.2.14)
+#
+
+. ./Mastodon.inc
+
+exedir BIN
+
+rm -f config.cache 
+CC="$SYSCC" ./configure --prefix=/usr --enable-history=complex
+make clean
+make CC="$SYSCC" CFLAGS=-O2 -j || exit 1
+install -d $BIN/bin
+install -d -o man -g man $BIN/usr/man/man1
+install -m 511 -o bin -g bin -c -s ksh $BIN/bin
+install -m 444 -o man -g man -c    ksh.1 $BIN/usr/man/man1
+
+. ../core.env
+if [ ! "$ASH_IS_SH" ]; then
+    ln -s ksh $BIN/bin/sh
+    echo ".so man1/ksh.1" > $BIN/usr/man/man1/sh.1
+fi
