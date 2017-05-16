@@ -539,6 +539,7 @@ wdcopy(wp, ap)
 	Area *ap;
 {
 	size_t len = wdscan(wp, EOS) - wp;
+
 	return memcpy(alloc(len, ap), wp, len);
 }
 

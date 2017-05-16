@@ -13,6 +13,8 @@ ecode=1
 trapsigs='0 1 2 13 15'
 trap 'rm -f $in $out; trap 0; exit $ecode' $trapsigs
 
+_POSIX2_VERSION=199209; export _POSIX2_VERSION
+
 CPP="${1-cc -E}"
 
 # The trap here to make up for a bug in bash (1.14.3(1)) that calls the trap

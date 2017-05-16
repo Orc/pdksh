@@ -12,7 +12,6 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-DEFS = @DEFS@
 LIBS = @LIBS@
 
 CPPFLAGS = @CPPFLAGS@
@@ -24,7 +23,6 @@ SHELL_PROG = @SHELL_PROG@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
-transform=@program_transform_name@
 
 bindir = $(exec_prefix)/bin
 mandir = $(prefix)/man/man$(manext)
@@ -107,30 +105,6 @@ $(SHELL_PROG).1: $(srcdir)/ksh.Man
 	$(srcdir)/mkman $(SHELL_PROG) $(srcdir)/ksh.Man > tmpksh.1
 	mv tmpksh.1 $(SHELL_PROG).1
 
-info:
-	@echo "No info (yet)"
-
-dvi:
-
-$(srcdir)/configure: configure.in aclocal.m4
-	cd $(srcdir) && autoconf
-
-$(srcdir)/config.h.in: stamp-h.in
-$(srcdir)/stamp-h.in: configure.in aclocal.m4 acconfig.h
-	cd $(srcdir) && autoheader
-	date > $(srcdir)/stamp-h.in
-
-config.h: stamp-h
-stamp-h: config.h.in config.status
-	CONFIG_FILES="" CONFIG_HEADERS=config.h ./config.status
-	date > stamp-h
-
-Makefile: Makefile.in config.status
-	CONFIG_FILES=Makefile CONFIG_HEADERS= ./config.status
-
-config.status: configure
-	LDSTATIC="$(LDSTATIC)" ./config.status --recheck
-
 # two steps to prevent the creation of a bogus siglist.out
 siglist.out: config.h sh.h siglist.in siglist.sh
 	$(srcdir)/siglist.sh "$(CPP) $(CPPFLAGS) $(DEFS) -I. -I$(srcdir)" < $(srcdir)/siglist.in > tmpsiglist.out
@@ -168,37 +142,10 @@ clean:
 
 mostlyclean: clean
 
-distclean: clean
-	rm -f Makefile config.h stamp-h config.status config.log config.cache \
-	      tags TAGS *~
+spotless distclean: clean
+	rm -f Makefile tags TAGS *~ @CONFIGURE_FILES@ @GENERATED_FILES@
 
 realclean: distclean
-
-dist: $(DISTFILES) $(ETCFILES) $(MISCFILES) $(TESTFILES) $(OS2FILES)
-	cd $(srcdir) && \
-	  { \
-	    ./new-version.sh; \
-	    FNAME=pdksh-`sed -e '/"@(.)/!d' \
-		    -e 's/[^0-9]*\([0-9.]*\).*/\1/' -e q version.c`; \
-	    if test `echo $$FNAME|tr . ' '|wc -w|sed 's/[       ]*//g'` -gt 3; \
-	    then \
-		FNAME=`echo $$FNAME | sed 's/pdksh-/pdksh-unstable-/'`; \
-	    fi; \
-	    echo Creating version $$FNAME; \
-	    rm -rf $$FNAME; \
-	    mkdir $$FNAME $$FNAME/etc $$FNAME/misc $$FNAME/tests $$FNAME/os2; \
-	    cp -p $(DISTFILES) $$FNAME; \
-	    cp -p $(ETCFILES) $$FNAME/etc; \
-	    cp -p $(MISCFILES) $$FNAME/misc; \
-	    cp -p $(TESTFILES) $$FNAME/tests; \
-	    cp -p $(OS2FILES) $$FNAME/os2; \
-	    ./emacs-gen.sh emacs.c > os2/emacs.out; \
-	    test -x ./Dist-fixup && ./Dist-fixup $$FNAME; \
-	    sed -f os2/make.sed < $$FNAME/Makefile.in > $$FNAME/os2/Makefile; \
-	    chmod -R a+rX,u+w,og-w $$FNAME; \
-	    tar chzf $$FNAME.tar.gz $$FNAME; \
-	    find $$FNAME -print | xargs pathchk -p; \
-	  }
 
 depend: $(SRCS)
 	sed -n '1,/[ ]PUT ANYTHING BELOW THIS LINE/p' < Makefile > Makefile.tmp
