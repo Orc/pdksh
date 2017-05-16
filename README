@@ -51,40 +51,14 @@ Files of interest:
 Compiling/Installing:
 
   The quick way:
-	./configure
+	./configure.sh
 	make
 	make check	# optional
 	make install	# will install /usr/local/bin/ksh
 			#  and /usr/local/man/man1/ksh.1
 	[add path-to-installed-pdksh to /etc/shells]
 
-  The more detailed description:
-    * run "configure --help | your-favorite-pager" and look at the
-      --enable-* and --disable-* options (they are at the end).
-      Select any you options you wish to enable/disable
-      (most people can skip this step).
-    * run configure: this is a GNU autoconf configure script that will generate
-      a Makefile and a config.h.  Some of the useful options to configure are:
-	--prefix=PATH	    indicates the directory tree under which the binary
-			    and man page are installed (ie, PATH/bin/ksh and
-			    PATH/man/man1/ksh.1).
-			    The default prefix is /usr/local.
-	--exec-prefix=PATH  overrides --prefix for machine dependent files
-			    (ie, the ksh binary)
-	--program-prefix=pd install binary and man page as pdksh and pdksh.1
-	--verbose	    show what is being defined as script runs
-      Note that you don't have to build in the source directory.  To build
-      in a separate directory, do something like:
-		$ mkdir objs
-		$ cd objs
-		$ ../configure --verbose
-		....
-		$ make
-      See the file INSTALL for a more complete description of configure and its
-      generic options (ksh specific options are documented in the --help output)
     * miscellaneous configuration notes:
-	* If your make doesn't understand VPATH, you must compile in
-	  the source directory.
 	* On DecStations, MIPS and SONY machines with older C compilers that
 	  can't handle "int * volatile x", you should use gcc or turn off
 	  optimization.  The problem is configure defines volatile to nothing
