@@ -66,10 +66,7 @@ AC_CHECK_FUNCS 'setrlimit'
 AC_CHECK_FIELD stat st_rdev sys/types.h sys/stat.h unistd.h
 
 # check for __attribute__(noreturn), which means that __attribute__ works
-if AC_CHECK_NORETURN; then
-    AC_DEFINE 'GCC_FUNC_ATTR(x)' '__attribute__((x))'
-    AC_DEFINE 'GCC_FUNC_ATTR2(x,y)' '__attribute__((x,y))'
-fi
+AC_CHECK_NORETURN && AC_DEFINE 'HAVE_GCC_FUNC_ATTR' '1'
 
 # define SIZEOF_INT/SIZEOF_LONG
 cat > ngc$$.c << EOF
@@ -142,13 +139,10 @@ if [ ! "$NO_EMACS" ]; then
     AC_DEFINE 'EMACS' '1'
 fi
 
-if [ "$edit" ]; then
-    AC_DEFINE 'EDIT' '1'
-    AC_DEFINE 'HISTORY' '1'
-fi
-
 AC_DEFINE 'KSH' '1'
 
 AC_SUB 'ac_exe_suffix' ''
+
+AC_TEXT '#include "conf-end.h"'
 
 AC_OUTPUT Makefile
