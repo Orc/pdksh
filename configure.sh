@@ -29,10 +29,11 @@ locals() {
 
 VERSION=`grep -i VERSION: IAFA-PACKAGE | awk '{print $2}'`
 TARGET=pdksh
-unset _MK_LIBRARIAN
+
 . ./configure.inc
 
 AC_INIT $TARGET
+unset _MK_LIBRARIAN
 
 AC_C_CONST
 AC_CHECK_TYPE pid_t sys/types.h || AC_DEFINE 'pid_t' 'int'
