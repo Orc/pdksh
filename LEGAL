@@ -14,21 +14,5 @@ The exceptions are:
 		    2/ that any changes to this code are clearly commented 
 		    as such so that the author does get blamed for bugs 
 		    other than his own.
-	aclocal.m4
-		This is covered by the GNU General Public Licence (GPL)
-		as it contains modified versions of macros that come with
-		GNU autoconf.  As this is used solely for configuration,
-		the pdksh code itself is not covered by the GPL.
-		The following is taken from autoconf 2.x documentation
-		(info autoconf questions distributing) concerning use
-		of autoconf in programs:
-
-		   There are no restrictions on how the configuration
-		   scripts that Autoconf produces may be distributed
-		   or used.  In Autoconf version 1, they were covered by
-		   the GNU General Public License.  We still encourage
-		   software authors to distribute their work under terms
-		   like those of the GPL, but doing so is not required
-		   to use Autoconf.
 
 That's it.  Short and simple.
