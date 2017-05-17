@@ -208,6 +208,33 @@ else
     LOG "(none)"
 fi
 
+LOGN "checking whether #! script headers work "
+PGM_FALSE=`acLookFor false`
+
+if [ ! "$PGM_FALSE" ] ;then
+    AC_PROG_CC
+    echo "int main() { return 1; }" >> ngc$$.c
+    if $AC_CC -o ngc$$ ngc$$.c; then
+	PGM_FALSE=`pwd`/ngc$$
+    else
+	rm -f ngc$$ ngc$$.c
+	AC_FAIL "can't compile a falsifier?"
+    fi
+fi
+cat > ngc$$.sh << EOF
+#! $PGM_FALSE
+exit 0
+EOF
+chmod +x ngc$$.sh
+
+if ./ngc$$.sh; then
+    LOG "(no)"
+else
+    AC_DEFINE 'SHARPBANG' '1'
+    LOG "(yes)"
+fi
+rm -f ngc$$ ngc$$.sh ngc$$.c
+
 AC_TEXT '#include "conf-end.h"'
 
 AC_OUTPUT Makefile
