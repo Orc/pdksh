@@ -81,9 +81,12 @@ else
     AC_DEFINE 'USA_FAKE_SIGACT' '1'
 fi
 
-AC_CHECK_HEADERS sys/wait.h unistd.h string.h stdlib.h paths.h
-AC_CHECK_HEADERS sys/time.h sys/resource.h stdarg.h
-AC_CHECK_HEADERS termios.h termio.h ulimit.h
+AC_CHECK_HEADERS sys/wait.h unistd.h stdlib.h string.h paths.h
+AC_CHECK_HEADERS sys/time.h sys/resource.h termios.h termio.h ulimit.h
+
+# HAVE_PROTOTYPES is misnamed;  it actually is the flag for using <stdarg.h> varargs
+# instead of the older varargs.h !
+AC_CHECK_HEADERS stdarg.h && AC_DEFINE 'HAVE_PROTOTYPES' '1'
 
 AC_CHECK_FIELD stat st_rdev sys/types.h sys/stat.h unistd.h
 
@@ -108,7 +111,7 @@ AC_CHECK_FUNCS bcopy
 AC_CHECK_FUNCS lstat
 AC_CHECK_FUNCS times
 
-test -d /dev/fd && AC_DEFINE 'HAVE_DEV_FD' '1'
+test -d /dev/fd/0 && AC_DEFINE 'HAVE_DEV_FD' '1'
 
 # opendir;  need to see if it will open a non-directory
 
@@ -146,24 +149,6 @@ elif AC_QUIET AC_CHECK_FUNCS 'setpgrp\(\)' unistd.h; then
 else
     LOG "(none)"
 fi
-
-LOGN "Do prototypes work? "
-cat > ngc$$.c << EOF
-
-int foo(int i);
-
-int bar() { return foo(1); }
-
-int foo(int i) { return -i; }
-EOF
-
-if $AC_CC -c ngc$$.c; then
-    LOG "(yes)"
-    AC_DEFINE 'HAVE_PROTOTYPES' '1'
-else
-    LOG "(no)"
-fi
-rm -f ngc$$.o ngc$$.c
 
 LOGN "checking whether #! script headers work "
 PGM_FALSE=`acLookFor false`
