@@ -307,7 +307,7 @@ EOF
     LOGN "looking for $type type"
 
     if __MAKEDOTO ngc$$.c; then
-	AC_DEFINE HAVE_`echo ${type} | $AC_UPPERCASE`
+	test "$UNDEFINED" || AC_DEFINE HAVE_`echo ${type} | $AC_UPPERCASE`
 	rc=0
     else
 	rc=1
