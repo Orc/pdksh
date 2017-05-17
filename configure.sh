@@ -187,11 +187,26 @@ AC_DEFINE 'DEFAULT_PATH' '"'${DEFAULT_PATH}'"'
 
 if [ "$HISTORY" != "NO" ]; then
     AC_DEFINE 'HISTORY' '1'
-    [ "$HISTORY" = "COMPLEX" ] && AC_DEFINE 'COMPLEX_HISTORY' '1'
+    if [ "$HISTORY" = "COMPLEX" ] ;then
+	AC_DEFINE 'COMPLEX_HISTORY' '1'
+    else
+	AC_DEFINE 'EASY_HISTORY' '1'
+    fi
 fi
 
-# need to build a test for POSIX|BSD process groups
-AC_DEFINE 'POSIX_PGRP'
+LOGN "checking process group type "
+if AC_QUIET AC_CHECK_FUNCS 'setpgrp\(0,0\)' unistd.h; then
+    LOG "(bsd)"
+    AC_DEFINE 'BSD_PGRP' '1'
+elif AC_QUIET AC_CHECK_FUNCS 'setpgid\(0,0\)' unistd.h; then
+    LOG "(posix)"
+    AC_DEFINE 'POSIX_PGRP' '1'
+elif AC_QUIET AC_CHECK_FUNCS 'setpgrp\(\)' unistd.h; then
+    LOG "(sysV)"
+    AC_DEFINE 'SYSV_PGRP' '1'
+else
+    LOG "(none)"
+fi
 
 AC_TEXT '#include "conf-end.h"'
 
