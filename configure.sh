@@ -148,6 +148,7 @@ elif AC_QUIET AC_CHECK_FUNCS 'setpgrp\(\)' unistd.h; then
     AC_DEFINE 'SYSV_PGRP' '1'
 else
     LOG "(none)"
+    AC_DEFINE 'NO_PGRP' '1'
 fi
 
 LOGN "checking whether #! script headers work "
@@ -198,6 +199,30 @@ else
     rm -f ngc$$ ngc$$.c
     AC_FAIL "cannot define SIZEOF_INT or SIZEOF_LONG"
 fi
+
+LOGN "Do signals interrupt a read? "
+cat > ngc$$.c << EOF
+main()
+{
+    char bfr[8];
+
+    alarm(1);
+    return (read(0, bfr, sizeof bfr) == sizeof bfr) ? 0 : 1;
+}
+EOF
+
+$AC_CC -o ngc$$ ngc$$.c
+
+(sleep 2; echo "LONG INPUT") | ./ngc$$
+
+if [ "$?" -ne 0 ]; then
+    LOG "(yes)";
+else
+    AC_DEFINE 'SIGNALS_DONT_INTERRUPT' '1'
+    LOG "(no)"
+fi
+rm -f ngc$$ ngc$$.c
+
 
 # add in the various flags that can be passed on in
 
