@@ -64,6 +64,8 @@ AC_INIT $TARGET
 unset _MK_LIBRARIAN
 
 AC_C_CONST
+AC_C_VOLATILE
+AC_C_VOID
 AC_CHECK_TYPE pid_t sys/types.h || AC_DEFINE 'pid_t' 'int'
 AC_CHECK_TYPE gid_t sys/types.h || AC_DEFINE 'gid_t' 'int'
 AC_CHECK_TYPE uid_t sys/types.h || AC_DEFINE 'uid_t' 'int'

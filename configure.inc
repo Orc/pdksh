@@ -883,6 +883,22 @@ AC_C_VOLATILE () {
     __remove ngc$$.c
     return $rc
 }
+#
+# AC_C_VOID checks to see if the compiler supports the void datatype
+#
+AC_C_VOID () {
+    echo 'f() { void *me= (void*)1; }' > ngc$$.c
+    LOGN "checking for \"void\" datatype"
+
+    if __MAKEDOTO ngc$$.c; then
+	rc=0
+    else
+	AC_DEFINE 'void' '/**/'
+	rc=1
+    fi
+    __remove ngc$$.c
+    return $rc
+}
 
 
 #
