@@ -10,10 +10,11 @@
 ac_help='
 --disable-vi		Disable vi line editing
 --disable-emacs		Disable emacs line editing
+--disable-jobs		Disable job control
+--disable-braces	Don'\''t compile in brace expansion (a{b,c} -> ab ac)
 --path=PATH		Default path if not defined in <paths.h>
 --{sh,ksh}		Specify whether to build a ksh or a bourne sh
---disable-jobs		No job control
---disable-braces	Don'\''t compile in brace expansion (a{b,c} -> ab ac)
+--env=ENV		Default environment
 --history={no,simple,complex}	History support
 --posix			Posix behavior by default
 --silly			[A silly option]
@@ -42,7 +43,8 @@ locals() {
 		elif [ "$history" = "COMPLEX" ]; then
 		    echo HISTORY=$history
 		fi ;;
-    --PATH=*)   echo DEFAULT_PATH=`echo $K | sed -e'/^--PATH=//'` ;;
+    --PATH=*)   echo "$1" | sed -e's/^--..../DEFAULT_PATH/' ;;
+    --ENV=*)	echo "$1" | sed -e's/^--.../DEFAULT_ENV/' ;;
     --SH)	echo SHELL=SH ;;
     --KSH)	echo SHELL=KSH ;;
     --POSIX)	echo POSIXLY_CORRECT=T ;;
@@ -80,43 +82,33 @@ else
 fi
 
 AC_CHECK_HEADERS sys/wait.h unistd.h string.h stdlib.h paths.h
-AC_CHECK_HEADERS sys/time.h sys/resource.h
-
-AC_CHECK_FUNCS strcasecmp
-
-AC_CHECK_HEADERS stdarg.h && AC_DEFINE 'HAVE_PROTOTYPES' '1'
-
-AC_CHECK_FUNCS 'mmap(0, 0, 0, 0, 0, 0)' sys/mman.h
-AC_CHECK_FUNCS 'dup2'
-AC_CHECK_FUNCS 'setrlimit'
+AC_CHECK_HEADERS sys/time.h sys/resource.h stdarg.h
+AC_CHECK_HEADERS termios.h termio.h ulimit.h
 
 AC_CHECK_FIELD stat st_rdev sys/types.h sys/stat.h unistd.h
 
 # check for __attribute__(noreturn), which means that __attribute__ works
 AC_CHECK_NORETURN && AC_DEFINE 'HAVE_GCC_FUNC_ATTR' '1'
 
-# define SIZEOF_INT/SIZEOF_LONG
-cat > ngc$$.c << EOF
-#include <stdio.h>
-int
-main()
-{
-    printf("SIZEOF_INT %d\n", sizeof(int));
-    printf("SIZEOF_LONG %d\n", sizeof(int));
-    return 0;
-}
-EOF
+AC_CHECK_FUNCS strcasecmp
+AC_CHECK_FUNCS 'mmap(0, 0, 0, 0, 0, 0)' sys/mman.h
+AC_CHECK_FUNCS 'dup2'
+AC_CHECK_FUNCS 'setrlimit'
+AC_CHECK_FUNCS tcsetpgrp 
+AC_CHECK_FUNCS getcwd
+AC_CHECK_FUNCS memset
+AC_CHECK_FUNCS nice
+AC_CHECK_FUNCS ulimit
+AC_CHECK_FUNCS waitpid
+AC_CHECK_FUNCS wait3
+AC_CHECK_FUNCS flock
+AC_CHECK_FUNCS memmove
+AC_CHECK_FUNCS memset
+AC_CHECK_FUNCS bcopy
+AC_CHECK_FUNCS lstat
+AC_CHECK_FUNCS times
 
-if $AC_CC -o ngc$$ ngc$$.c; then
-    ./ngc$$ | while read def value; do
-	LOG "define $def as $value"
-	AC_DEFINE $def $value
-    done
-    rm -f ngc$$ ngc$$.c
-else
-    rm -f ngc$$ ngc$$.c
-    AC_FAIL "cannot define SIZEOF_INT or SIZEOF_LONG"
-fi
+test -d /dev/fd && AC_DEFINE 'HAVE_DEV_FD' '1'
 
 # opendir;  need to see if it will open a non-directory
 
@@ -141,59 +133,6 @@ EOF
     rm -f ngc$$ ngc$$.c
 fi
 
-
-
-AC_CHECK_HEADERS termios.h termio.h
-
-AC_CHECK_FUNCS tcsetpgrp 
-AC_CHECK_FUNCS getcwd
-AC_CHECK_FUNCS memset
-AC_CHECK_FUNCS nice
-AC_CHECK_HEADERS ulimit.h
-AC_CHECK_FUNCS ulimit
-AC_CHECK_FUNCS waitpid
-AC_CHECK_FUNCS wait3
-AC_CHECK_FUNCS flock
-AC_CHECK_FUNCS memmove
-AC_CHECK_FUNCS memset
-AC_CHECK_FUNCS bcopy
-AC_CHECK_FUNCS lstat
-
-test -d /dev/fd && AC_DEFINE 'HAVE_DEV_FD' '1'
-
-AC_DEFINE 'RETSIGTYPE' 'void'
-AC_DEFINE 'RETSIGVAL' '/**/'
-
-AC_SUB 'ac_exe_suffix' ''
-
-test "$SILLY" && AC_DEFINE 'SILLY' '1'
-test "$NO_JOBS" || AC_DEFINE 'JOBS' '1'
-test "$POSIX" && AC_DEFINE 'POSIXLY_CORRECT' '1'
-test "$NO_BRACES" || AC_DEFINE 'BRACE_EXPAND' '1'
-
-if [ "$SHELL" = "SH" ]; then
-    AC_DEFINE 'SH' '1'
-    AC_SUB 'SHELL_PROG' 'sh'
-else
-    AC_DEFINE 'KSH' '1'
-    AC_SUB 'SHELL_PROG' 'ksh'
-    test "$NO_VI" || AC_DEFINE 'VI' '1'
-    test "$NO_EMACS" || AC_DEFINE 'EMACS' '1'
-fi
-
-test "$DEFAULT_PATH" || DEFAULT_PATH="/bin:/usr/bin:/usr/local/bin"
-AC_DEFINE 'DEFAULT_PATH' '"'${DEFAULT_PATH}'"'
-
-
-if [ "$HISTORY" != "NO" ]; then
-    AC_DEFINE 'HISTORY' '1'
-    if [ "$HISTORY" = "COMPLEX" ] ;then
-	AC_DEFINE 'COMPLEX_HISTORY' '1'
-    else
-	AC_DEFINE 'EASY_HISTORY' '1'
-    fi
-fi
-
 LOGN "checking process group type "
 if AC_QUIET AC_CHECK_FUNCS 'setpgrp\(0,0\)' unistd.h; then
     LOG "(bsd)"
@@ -208,11 +147,28 @@ else
     LOG "(none)"
 fi
 
+LOGN "Do prototypes work? "
+cat > ngc$$.c << EOF
+
+int foo(int i);
+
+int bar() { return foo(1); }
+
+int foo(int i) { return -i; }
+EOF
+
+if $AC_CC -c ngc$$.c; then
+    LOG "(yes)"
+    AC_DEFINE 'HAVE_PROTOTYPES' '1'
+else
+    LOG "(no)"
+fi
+rm -f ngc$$.o ngc$$.c
+
 LOGN "checking whether #! script headers work "
 PGM_FALSE=`acLookFor false`
 
 if [ ! "$PGM_FALSE" ] ;then
-    AC_PROG_CC
     echo "int main() { return 1; }" >> ngc$$.c
     if $AC_CC -o ngc$$ ngc$$.c; then
 	PGM_FALSE=`pwd`/ngc$$
@@ -234,6 +190,70 @@ else
     LOG "(yes)"
 fi
 rm -f ngc$$ ngc$$.sh ngc$$.c
+
+# define SIZEOF_INT/SIZEOF_LONG
+cat > ngc$$.c << EOF
+#include <stdio.h>
+int
+main()
+{
+    printf("SIZEOF_INT %d\n", sizeof(int));
+    printf("SIZEOF_LONG %d\n", sizeof(int));
+    return 0;
+}
+EOF
+
+if $AC_CC -o ngc$$ ngc$$.c; then
+    ./ngc$$ | while read def value; do
+	LOG "define $def as $value"
+	AC_DEFINE $def $value
+    done
+    rm -f ngc$$ ngc$$.c
+else
+    rm -f ngc$$ ngc$$.c
+    AC_FAIL "cannot define SIZEOF_INT or SIZEOF_LONG"
+fi
+
+# add in the various flags that can be passed on in
+
+AC_DEFINE 'RETSIGTYPE' 'void'
+AC_DEFINE 'RETSIGVAL' '/**/'
+
+AC_SUB 'ac_exe_suffix' ''
+
+test "$SILLY" && AC_DEFINE 'SILLY' '1'
+test "$NO_JOBS" || AC_DEFINE 'JOBS' '1'
+test "$POSIX" && AC_DEFINE 'POSIXLY_CORRECT' '1'
+test "$NO_BRACES" || AC_DEFINE 'BRACE_EXPAND' '1'
+
+if [ "$SHELL" = "SH" ]; then
+    AC_DEFINE 'SH' '1'
+    AC_SUB 'SHELL_PROG' 'sh'
+else
+    AC_DEFINE 'KSH' '1'
+    AC_SUB 'SHELL_PROG' 'ksh'
+    test "$NO_VI" || AC_DEFINE 'VI' '1'
+    test "$NO_EMACS" || AC_DEFINE 'EMACS' '1'
+fi
+
+case "$DEFAULT_ENV" in
+"")	;;
+0|NULL)	AC_DEFINE 'DEFAULT_ENV' $DEFAULT_ENV ;;
+*)	AC_DEFINE 'DEFAULT_ENV' \""${DEFAULT_ENV}"\" ;;
+esac
+
+test "$DEFAULT_PATH" || DEFAULT_PATH="/bin:/usr/bin:/usr/local/bin"
+AC_DEFINE 'DEFAULT_PATH' '"'${DEFAULT_PATH}'"'
+
+
+if [ "$HISTORY" != "NO" ]; then
+    AC_DEFINE 'HISTORY' '1'
+    if [ "$HISTORY" = "COMPLEX" ] ;then
+	AC_DEFINE 'COMPLEX_HISTORY' '1'
+    else
+	AC_DEFINE 'EASY_HISTORY' '1'
+    fi
+fi
 
 AC_TEXT '#include "conf-end.h"'
 
