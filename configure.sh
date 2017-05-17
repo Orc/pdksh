@@ -7,8 +7,17 @@
 
 # load in the configuration file
 #
-ac_help='--disable-vi	Disable vi line editing
---disable-emacs	Disable emacs line editing'
+ac_help='
+--disable-vi		Disable vi line editing
+--disable-emacs		Disable emacs line editing
+--path=PATH		Default path if not defined in <paths.h>
+--{sh,ksh}		Specify whether to build a ksh or a bourne sh
+--disable-jobs		No job control
+--disable-braces	Don'\''t compile in brace expansion (a{b,c} -> ab ac)
+--history={no,simple,complex}	History support
+--posix			Posix behavior by default
+--silly			[A silly option]
+--swtch			Shell layer (shl(1)) support.  Obsolete?'
 
 LOCAL_AC_OPTIONS='
 set=`locals $*`;
@@ -20,15 +29,32 @@ else
 fi'
 
 locals() {
-    K=`echo $1 | $AC_UPPERCASE`
+    local history
+    local K=`echo $1 | $AC_UPPERCASE`
     case "$K" in
     --DISABLE-*)disable=`echo $K | sed -e 's/--DISABLE-//' | tr '-' '_'`
 		echo NO_${disable}=T ;;
+    --HISTORY=*)history=`echo $K | sed -e '/^--HISTORY=//'`
+		if [ "$history" = "NO" ]; then
+		    echo HISTORY=$history
+		elif [ "$history" = "SIMPLE" ]; then
+		    echo HISTORY=$history
+		elif [ "$history" = "COMPLEX" ]; then
+		    echo HISTORY=$history
+		fi ;;
+    --PATH=*)   echo DEFAULT_PATH=`echo $K | sed -e'/^--PATH=//'` ;;
+    --SH)	echo SHELL=SH ;;
+    --KSH)	echo SHELL=KSH ;;
+    --POSIX)	echo POSIXLY_CORRECT=T ;;
+    --SILLY)	echo SILLY=T ;;
+    --SWTCH)	echo SWTCH=T ;;
     esac
 }
 
 VERSION=`grep -i VERSION: IAFA-PACKAGE | awk '{print $2}'`
 TARGET=pdksh
+SHELL=KSH
+HISTORY=COMPLEX
 
 . ./configure.inc
 
@@ -53,7 +79,7 @@ else
     AC_DEFINE 'USA_FAKE_SIGACT' '1'
 fi
 
-AC_CHECK_HEADERS sys/wait.h unistd.h string.h stdlib.h
+AC_CHECK_HEADERS sys/wait.h unistd.h string.h stdlib.h paths.h
 AC_CHECK_HEADERS sys/time.h sys/resource.h
 
 AC_CHECK_FUNCS strcasecmp
@@ -122,27 +148,47 @@ AC_CHECK_HEADERS termios.h termio.h
 AC_CHECK_FUNCS tcsetpgrp 
 AC_CHECK_FUNCS getcwd
 AC_CHECK_FUNCS memset
-	    
+AC_CHECK_FUNCS nice
+AC_CHECK_HEADERS ulimit.h
+AC_CHECK_FUNCS ulimit
+AC_CHECK_FUNCS waitpid
+AC_CHECK_FUNCS wait3
+AC_CHECK_FUNCS flock
+AC_CHECK_FUNCS memmove
+AC_CHECK_FUNCS memset
+AC_CHECK_FUNCS bcopy
+AC_CHECK_FUNCS lstat
+
+test -d /dev/fd && AC_DEFINE 'HAVE_DEV_FD' '1'
 
 AC_DEFINE 'RETSIGTYPE' 'void'
 AC_DEFINE 'RETSIGVAL' '/**/'
 
-AC_DEFINE 'DEFAULT_PATH' '"/bin:/usr/bin:/usr/local/bin"'
-AC_SUB 'SHELL_PROG' 'ksh'
-
-unset edit
-if [ ! "$NO_VI" ]; then
-    edit=1
-    AC_DEFINE 'VI' '1'
-fi
-if [ ! "$NO_EMACS" ]; then
-    edit=1
-    AC_DEFINE 'EMACS' '1'
-fi
-
-AC_DEFINE 'KSH' '1'
-
 AC_SUB 'ac_exe_suffix' ''
+
+test "$SILLY" && AC_DEFINE 'SILLY' '1'
+test "$NO_JOBS" || AC_DEFINE 'JOBS' '1'
+test "$POSIX" && AC_DEFINE 'POSIXLY_CORRECT' '1'
+test "$NO_BRACES" || AC_DEFINE 'BRACE_EXPAND' '1'
+
+if [ "$SHELL" = "SH" ]; then
+    AC_DEFINE 'SH' '1'
+    AC_SUB 'SHELL_PROG' 'sh'
+else
+    AC_DEFINE 'KSH' '1'
+    AC_SUB 'SHELL_PROG' 'ksh'
+    test "$NO_VI" || AC_DEFINE 'VI' '1'
+    test "$NO_EMACS" || AC_DEFINE 'EMACS' '1'
+fi
+
+test "$DEFAULT_PATH" || DEFAULT_PATH="/bin:/usr/bin:/usr/local/bin"
+AC_DEFINE 'DEFAULT_PATH' '"'${DEFAULT_PATH}'"'
+
+
+if [ "$HISTORY" != "NO" ]; then
+    AC_DEFINE 'HISTORY' '1'
+    [ "$HISTORY" = "COMPLEX" ] && AC_DEFINE 'COMPLEX_HISTORY' '1'
+fi
 
 AC_TEXT '#include "conf-end.h"'
 
