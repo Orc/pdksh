@@ -190,6 +190,9 @@ if [ "$HISTORY" != "NO" ]; then
     [ "$HISTORY" = "COMPLEX" ] && AC_DEFINE 'COMPLEX_HISTORY' '1'
 fi
 
+# need to build a test for POSIX|BSD process groups
+AC_DEFINE 'POSIX_PGRP'
+
 AC_TEXT '#include "conf-end.h"'
 
 AC_OUTPUT Makefile
