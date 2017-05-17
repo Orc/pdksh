@@ -186,7 +186,7 @@ int
 main()
 {
     printf("SIZEOF_INT %d\n", sizeof(int));
-    printf("SIZEOF_LONG %d\n", sizeof(int));
+    printf("SIZEOF_LONG %d\n", sizeof(long));
     return 0;
 }
 EOF
