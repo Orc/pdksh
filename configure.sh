@@ -47,7 +47,7 @@ locals() {
     --ENV=*)	echo "$1" | sed -e's/^--.../DEFAULT_ENV/' ;;
     --SH)	echo SHELL=SH ;;
     --KSH)	echo SHELL=KSH ;;
-    --POSIX)	echo POSIXLY_CORRECT=T ;;
+    --POSIX)	echo POSIX=T ;;
     --SILLY)	echo SILLY=T ;;
     --SWTCH)	echo SWTCH=T ;;
     esac
@@ -254,8 +254,7 @@ case "$DEFAULT_ENV" in
 *)	AC_DEFINE 'DEFAULT_ENV' \""${DEFAULT_ENV}"\" ;;
 esac
 
-test "$DEFAULT_PATH" || DEFAULT_PATH="/bin:/usr/bin:/usr/local/bin"
-AC_DEFINE 'DEFAULT_PATH' '"'${DEFAULT_PATH}'"'
+AC_DEFINE 'DEFAULT_PATH' '"'${DEFAULT_PATH:-/bin:/usr/bin:/usr/local/bin}'"'
 
 
 if [ "$HISTORY" != "NO" ]; then
@@ -270,3 +269,21 @@ fi
 AC_TEXT '#include "conf-end.h"'
 
 AC_OUTPUT Makefile
+
+LOG
+LOGN "shell type:     "; test "$SHELL" = "KSH" && LOG "ksh" || LOG "sh"
+LOGN "vi-mode:        "; test "$NO_VI" && LOG "no" || LOG "yes"
+LOGN "emacs-mode:     "; test "$NO_EMACS" && LOG "no" || LOG "yes"
+LOGN "job control:    "; test "$NO_JOBS" && LOG "no" || LOG "yes"
+LOGN "brace expansion:"; test "$NO_BRACES" && LOG "no" || LOG "yes"
+LOGN "posixly_correct:"; test "$POSIX" && LOG "yes" || LOG "no"
+LOGN "shell layers:   "; test "$SWTCH" && LOG "yes" || LOG "no"
+test "$SILLY" && LOG "silly:          quite so!"
+test "$DEFAULT_PATH" && LOG "default_path:   $DEFAULT_PATH"
+test "$DEFAULT_ENV"  && LOG "default_env:    $DEFAULT_ENV"
+case "$HISTORY" in
+NO)      LOG "history:        disabled" ;;
+COMPLEX) LOG "history:        complex" ;;
+*)       LOG "history:        simple" ;;
+esac
+LOG
