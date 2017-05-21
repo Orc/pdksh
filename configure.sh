@@ -140,8 +140,14 @@ fi
 
 LOGN "checking process group type "
 if AC_QUIET AC_CHECK_FUNCS 'setpgrp\(0,0\)' unistd.h; then
-    LOG "(bsd)"
-    AC_DEFINE 'BSD_PGRP' '1'
+    # bsd or posix; getpgrp() will tell the difference
+    if AC_QUIET AC_CHECK_FUNCS 'getpgrp\(0\)' unistd.h; then
+	LOG "(bsd)"
+	AC_DEFINE 'BSD_PGRP' '1'
+    else
+	LOG "(posix)"
+	AC_DEFINE 'POSIX_PGRP' '1'
+    fi
 elif AC_QUIET AC_CHECK_FUNCS 'setpgid\(0,0\)' unistd.h; then
     LOG "(posix)"
     AC_DEFINE 'POSIX_PGRP' '1'
