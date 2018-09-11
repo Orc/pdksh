@@ -85,9 +85,10 @@ fi
 
 AC_CHECK_HEADERS sys/wait.h unistd.h stdlib.h string.h paths.h
 AC_CHECK_HEADERS sys/time.h sys/resource.h termios.h termio.h ulimit.h
+AC_CHECK_HEADERS limits.h
 
-# HAVE_PROTOTYPES is misnamed;  it actually is the flag for using <stdarg.h> varargs
-# instead of the older varargs.h !
+# HAVE_PROTOTYPES is misnamed;  it actually is the flag for using <stdarg.h>
+# varargs instead of the older varargs.h !
 AC_CHECK_HEADERS stdarg.h && AC_DEFINE 'HAVE_PROTOTYPES' '1'
 
 AC_CHECK_FIELD stat st_rdev sys/types.h sys/stat.h unistd.h
