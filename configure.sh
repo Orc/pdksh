@@ -114,6 +114,15 @@ AC_CHECK_FUNCS bcopy
 AC_CHECK_FUNCS lstat
 AC_CHECK_FUNCS times
 
+if AC_CHECK_DEF CLK_TCK limits.h time.h; then
+    : yay
+elif [ "$OS_LINUX" ]; then
+    # maybe uses sysconf?
+    if AC_CHECK_FUNCS 'sysconf(_SC_CLK_TCK)' unistd.h; then
+	AC_DEFINE 'CLK_TCK' 'sysconf(_SC_CLK_TCK)'
+    fi
+fi
+
 test -d /dev/fd/0 && AC_DEFINE 'HAVE_DEV_FD' '1'
 
 # opendir;  need to see if it will open a non-directory

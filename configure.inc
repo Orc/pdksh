@@ -318,6 +318,40 @@ EOF
 
 
 #
+# check to see if some #define exists
+#
+# usage: AC_CHECK_DEF define {include ...}
+#
+AC_CHECK_DEF () {
+    define=$1
+    shift
+
+    __remove ngc$$.c
+
+    for include in $*; do
+	echo "#include <$include>" >> ngc$$.c
+    done
+
+    cat >> ngc$$.c << EOF
+int main()
+{
+#ifndef $define
+#error $define not defined
+#endif
+}
+EOF
+
+    LOGN "looking for #define $define"
+
+    __MAKEDOTO ngc$$.c
+    rc=$?
+    
+    __remove ngc$$.c
+    return $rc
+}
+
+
+#
 # check to see if some structure contains a field
 #
 # usage: AC_CHECK_FIELD structure field {include ...}
