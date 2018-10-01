@@ -6,7 +6,6 @@
 #
 
 set -e
-set -x
 
 in=tmpi$$.c
 out=tmpi$$
@@ -22,23 +21,20 @@ CC="${1-cc}"
 (trap $trapsigs;
  echo '#include "sh.h"';
  echo 'main() {';
- echo ' printf("%s,`%s`,`%s`\\n", "SIGNALS", "DUMMY", "hook for number of signals");'
  sed -e '/^[	 ]*#/d' -e 's/^[	 ]*\([^ 	][^ 	]*\)[	 ][	 ]*\(.*[^ 	]\)[ 	]*$/#ifdef SIG\1\
 	printf("%d,`%s`,`%s`\\n", SIG\1 , "\1", "\2" );\
 #endif/'
   echo '}') > $in
+cp $in iglist.src
 $CC $in  -o $out
 ./$out | sort -n | tr '`' '"' |
     awk -F, 'BEGIN { last=0; nsigs=0; }
-	{   if ($1 ~ /^[0-9][0-9]*$/ ) {
-		n = $1;
-		if (n > 0 && n != last) {
-		    while (++last < n) {
-			printf "\t{ %d , (char *) 0, \"Signal %d\" } ,\n",
-			     last, last;
-		    }
-		    printf "\t{ %s },\n", $0;
+	{    n = $1;
+	    if (n > 0 && n != last) {
+		while (++last < n) {
+		    printf "\t{ %d , (char *) 0, \"Signal %d\" } ,\n", last, last;
 		}
+		printf "\t{ %s },\n", $0;
 	    }
 	}'
 ecode=0
