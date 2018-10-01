@@ -25,7 +25,6 @@ CC="${1-cc}"
 	printf("%d,`%s`,`%s`\\n", SIG\1 , "\1", "\2" );\
 #endif/'
   echo '}') > $in
-cp $in iglist.src
 $CC $in  -o $out
 ./$out | sort -n | tr '`' '"' |
     awk -F, 'BEGIN { last=0; nsigs=0; }
