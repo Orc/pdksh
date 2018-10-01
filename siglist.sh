@@ -34,7 +34,7 @@ $CC $in  -o $out
 		n = $1;
 		if (n > 0 && n != last) {
 		    while (++last < n) {
-			printf "\t{ %d , (char *) 0, `Signal %d` } ,\n",
+			printf "\t{ %d , (char *) 0, \"Signal %d\" } ,\n",
 			     last, last;
 		    }
 		    printf "\t{ %s },\n", $0;
