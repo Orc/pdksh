@@ -6,38 +6,39 @@
 #
 
 set -e
+set -x
 
 in=tmpi$$.c
-out=tmpo$$.c
+out=tmpi$$
 ecode=1
 trapsigs='0 1 2 13 15'
 trap 'rm -f $in $out; trap 0; exit $ecode' $trapsigs
 
 _POSIX2_VERSION=199209; export _POSIX2_VERSION
 
-CPP="${1-cc -E}"
+CC="${1-cc}"
 
 # The trap here to make up for a bug in bash (1.14.3(1)) that calls the trap
 (trap $trapsigs;
  echo '#include "sh.h"';
- echo '	{ QwErTy SIGNALS , "DUMMY" , "hook for number of signals" },';
+ echo 'main() {';
+ echo ' printf("%s,`%s`,`%s`\\n", "SIGNALS", "DUMMY", "hook for number of signals");'
  sed -e '/^[	 ]*#/d' -e 's/^[	 ]*\([^ 	][^ 	]*\)[	 ][	 ]*\(.*[^ 	]\)[ 	]*$/#ifdef SIG\1\
-	{ QwErTy SIG\1 , "\1", "\2" },\
-#endif/') > $in
-$CPP $in  > $out
-sed -n 's/{ QwErTy/{/p' < $out | awk '{print NR, $0}' | sort +2n +0n |
-    sed 's/^[0-9]* //' |
-    awk 'BEGIN { last=0; nsigs=0; }
-	{
-	    if ($2 ~ /^[0-9][0-9]*$/ && $3 == ",") {
-		n = $2;
+	printf("%d,`%s`,`%s`\\n", SIG\1 , "\1", "\2" );\
+#endif/'
+  echo '}') > $in
+$CC $in  -o $out
+./$out | sort -n | tr '`' '"' |
+    awk -F, 'BEGIN { last=0; nsigs=0; }
+	{   if ($1 ~ /^[0-9][0-9]*$/ ) {
+		n = $1;
 		if (n > 0 && n != last) {
 		    while (++last < n) {
-			printf "\t{ %d , (char *) 0, `Signal %d` } ,\n", last, last;
+			printf "\t{ %d , (char *) 0, `Signal %d` } ,\n",
+			     last, last;
 		    }
-		    print;
+		    printf "\t{ %s },\n", $0;
 		}
 	    }
-	}' |
-    tr '`' '"' | grep -v '"DUMMY"'
+	}'
 ecode=0

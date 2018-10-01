@@ -106,7 +106,7 @@ $(SHELL_PROG).1: $(srcdir)/ksh.Man
 
 # two steps to prevent the creation of a bogus siglist.out
 siglist.out: config.h sh.h siglist.in siglist.sh
-	$(srcdir)/siglist.sh "$(CPP) $(CPPFLAGS) $(DEFS) -I. -I$(srcdir)" < $(srcdir)/siglist.in > tmpsiglist.out
+	$(srcdir)/siglist.sh "$(CC) $(CPPFLAGS) $(DEFS) -I. -I$(srcdir)" < $(srcdir)/siglist.in > tmpsiglist.out
 	mv tmpsiglist.out siglist.out
 
 # two steps to prevent the creation of a bogus emacs.out
