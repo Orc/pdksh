@@ -10,8 +10,9 @@ set -e
 in=tmpi$$.c
 out=tmpi$$
 ecode=1
-trapsigs='0 1 2 13 15'
-trap 'rm -f $in $out; trap 0; exit $ecode' $trapsigs
+trapsigs='1 2 13 15'
+trap 'rm -f $in $out; exit $ecode' $trapsigs
+trap 'rm -f $in $out; exit 0' 0
 
 _POSIX2_VERSION=199209; export _POSIX2_VERSION
 
